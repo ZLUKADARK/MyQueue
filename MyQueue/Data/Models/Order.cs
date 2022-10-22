@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace MyQueue.Data.Models
 {
@@ -10,5 +10,6 @@ namespace MyQueue.Data.Models
         public int Id { get; set; }
         public DateTime Date { get; set; }
         public List<Foods> Foods { get; set; }
+        public IdentityUser User { get; set; }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MyQueue.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace MyQueue
 {
@@ -20,9 +21,20 @@ namespace MyQueue
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddControllersWithViews();
             services.AddControllers();
             services.AddDbContext<MQDBContext>(options =>
                     options.UseNpgsql(Configuration.GetConnectionString("MQDBContext")));
+            services.AddIdentityCore<IdentityUser>(
+                opt => 
+                {
+                    opt.Password.RequireDigit = true;
+                    opt.Password.RequiredLength = 8;
+                    opt.User.RequireUniqueEmail = true;
+                    opt.SignIn.RequireConfirmedEmail = false;
+                }
+                ).AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<MQDBContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,6 +50,7 @@ namespace MyQueue
             app.UseRouting();
 
             app.UseAuthorization();
+            app.UseAuthentication();
 
             app.UseEndpoints(endpoints =>
             {
