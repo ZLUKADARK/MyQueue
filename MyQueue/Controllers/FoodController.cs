@@ -22,39 +22,129 @@ namespace MyQueue.Controllers
             _context = context;
         }
 
-        // GET: api/Food
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Category>>> GetCategory()
+        // GET: api/Food/category
+        [HttpGet("category")]
+        public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategory()
         {
-            return await _context.Category.ToListAsync();
-        }
-
-        // GET: api/Food/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Category>> GetCategory(int id)
-        {
-            var category = await _context.Category.FindAsync(id);
-
-            if (category == null)
+            try
             {
-                return NotFound();
+                var result = from res in _context.Category.AsNoTracking()
+                             select new CategoryDTO
+                             {
+                                 Id = res.Id,
+                                 Name = res.Name
+                             };
+                return await result.ToListAsync();
             }
-
-            return category;
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+            
         }
 
-        // PUT: api/Food/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for
-        // more details, see https://go.microsoft.com/fwlink/?linkid=2123754.
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategory(int id, Category category)
+        // GET: api/Food/food
+        [HttpGet("food")]
+        public async Task<ActionResult<IEnumerable<FoodsResultDTO>>> GetFood()
         {
-            if (id != category.Id)
+            try
+            {
+                var result = from res in _context.Foods.Include(c => c.Category).AsNoTracking()
+                             select new FoodsResultDTO
+                             {
+                                 Id = res.Id,
+                                 Name = res.Name,
+                                 Category = res.Category.Name,
+                                 Price = res.Price
+                             };
+                return await result.ToListAsync();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
+        // GET: api/Food/category/5
+        [HttpGet("category/{id}")]
+        public async Task<ActionResult<CategoryDTO>> GetCategory(int id)
+        {
+            try
+            {
+                var category = await _context.Category.FindAsync(id);   
+                if (category == null)
+                {
+                    return NotFound();
+                }
+                var result = new CategoryDTO { Id = category.Id, Name = category.Name };
+                return result;
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+            
+        }
+
+        // GET: api/Food/food/5
+        [HttpGet("food/{id}")]
+        public async Task<ActionResult<FoodsResultDTO>> GetFood(int id)
+        {
+            try
+            {
+                var food = await _context.Foods.Include(c => c.Category).Where(f => f.Id == id).AsNoTracking().FirstOrDefaultAsync();   
+                if (food == null)
+                {
+                    return NotFound();
+                }
+                var result = new FoodsResultDTO { Id = food.Id, Name = food.Name, Category = food.Category.Name, Price = food.Price };
+                return result;
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e);
+            }
+        }
+
+        // PUT: api/Food/category/5
+        [HttpPut("category/{id}")]
+        public async Task<IActionResult> PutCategory(int id, CategoryDTO category)
+        {
+            if (category.Id != id)
+                return BadRequest();
+
+            var result = new Category() { Id = category.Id, Name = category.Name};
+
+            _context.Entry(result).State = EntityState.Modified;
+           
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!CategoryExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return NoContent();
+        }
+        
+        // PUT: api/Food/food/5
+        [HttpPut("food/{id}")]
+        public async Task<IActionResult> PutFood(int id, FoodDTO foodDTO)
+        {
+            if (id != foodDTO.Id)
             {
                 return BadRequest();
             }
-
-            _context.Entry(category).State = EntityState.Modified;
+            var result = new Foods() { Id = foodDTO.Id, Name = foodDTO.Name, Price = foodDTO.Price };
+            _context.Entry(result).State = EntityState.Modified;
 
             try
             {
@@ -98,8 +188,8 @@ namespace MyQueue.Controllers
             return CreatedAtAction("GetCategory", new { id = foods.Id }, result);
         }
 
-        // DELETE: api/Food/5
-        [HttpDelete("{id}")]
+        // DELETE: api/Food/category/5
+        [HttpDelete("category/{id}")]
         public async Task<ActionResult<Category>> DeleteCategory(int id)
         {
             var category = await _context.Category.FindAsync(id);
@@ -112,6 +202,21 @@ namespace MyQueue.Controllers
             await _context.SaveChangesAsync();
 
             return category;
+        }
+        // DELETE: api/Food/5
+        [HttpDelete("food/{id}")]
+        public async Task<ActionResult<Foods>> DeleteFood(int id)
+        {
+            var food = await _context.Foods.FindAsync(id);
+            if (food == null)
+            {
+                return NotFound();
+            }
+
+            _context.Foods.Remove(food);
+            await _context.SaveChangesAsync();
+
+            return food;
         }
 
         private bool CategoryExists(int id)
