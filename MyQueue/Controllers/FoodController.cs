@@ -173,7 +173,9 @@ namespace MyQueue.Controllers
             _context.Category.Add(category);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCategory", new { id = category.Id }, categoryDto);
+            return CreatedAtAction("GetCategory", 
+                new { id = category.Id }, 
+                new CategoryDTO { Id = category.Id, Name = category.Name });
         }
         
         // POST: api/Food/food
@@ -181,16 +183,17 @@ namespace MyQueue.Controllers
         public async Task<ActionResult<FoodsResultDTO>> AddFood(FoodDTO foodDto)
         {
             Foods foods = new Foods() { Name = foodDto.Name, Price = foodDto.Price, Category = await _context.Category.FindAsync(foodDto.Category) };
-            FoodsResultDTO result = new FoodsResultDTO() { Category = foods.Category.Name, Name = foods.Name, Price = foods.Price };
             _context.Foods.Add(foods);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCategory", new { id = foods.Id }, result);
+            return CreatedAtAction("GetCategory", 
+                new { id = foods.Id }, 
+                new FoodsResultDTO() { Id = foods.Id, Category = foods.Category.Name, Name = foods.Name, Price = foods.Price });
         }
 
         // DELETE: api/Food/category/5
         [HttpDelete("category/{id}")]
-        public async Task<ActionResult<Category>> DeleteCategory(int id)
+        public async Task<ActionResult<CategoryDTO>> DeleteCategory(int id)
         {
             var category = await _context.Category.FindAsync(id);
             if (category == null)
@@ -201,13 +204,13 @@ namespace MyQueue.Controllers
             _context.Category.Remove(category);
             await _context.SaveChangesAsync();
 
-            return category;
+            return new CategoryDTO() { Id = category.Id, Name = category.Name } ;
         }
-        // DELETE: api/Food/5
+        // DELETE: api/Food/food/5
         [HttpDelete("food/{id}")]
-        public async Task<ActionResult<Foods>> DeleteFood(int id)
+        public async Task<ActionResult<FoodsResultDTO>> DeleteFood(int id)
         {
-            var food = await _context.Foods.FindAsync(id);
+            var food = await _context.Foods.Include(c => c.Category).Where(f => f.Id == id).AsNoTracking().FirstOrDefaultAsync();
             if (food == null)
             {
                 return NotFound();
@@ -216,7 +219,7 @@ namespace MyQueue.Controllers
             _context.Foods.Remove(food);
             await _context.SaveChangesAsync();
 
-            return food;
+            return new FoodsResultDTO() { Id = food.Id, Category = food.Category.Name, Name = food.Name, Price = food.Price };
         }
 
         private bool CategoryExists(int id)
