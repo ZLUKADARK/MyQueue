@@ -206,6 +206,7 @@ namespace MyQueue.Controllers
 
             return new CategoryDTO() { Id = category.Id, Name = category.Name } ;
         }
+
         // DELETE: api/Food/food/5
         [HttpDelete("food/{id}")]
         public async Task<ActionResult<FoodsResultDTO>> DeleteFood(int id)

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using MyQueue.DataTansferObject.Authorization;
 using MyQueue.Data;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using MyQueue.DataTansferObject.FoodManipulation;
 
 namespace MyQueue.Controllers
 {
@@ -18,7 +20,11 @@ namespace MyQueue.Controllers
             _userManager = userManager;
             _context = context;
         }
+
         // POST api/<AuthorizationController>
+
+
+        // POST api/AuthorizationController
         [HttpPost("register")]
         public async Task<IActionResult> Registeration( Registration registration)
         {
@@ -35,7 +41,7 @@ namespace MyQueue.Controllers
 
                     if (result.Succeeded)
                     {
-                        await _userManager.AddToRoleAsync(user, "USER");
+                        await _userManager.AddToRoleAsync(user, "User");
                         return Created("", registration);
                     }
                 }
