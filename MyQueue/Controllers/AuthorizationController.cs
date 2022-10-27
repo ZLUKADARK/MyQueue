@@ -5,6 +5,13 @@ using MyQueue.Data;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using MyQueue.DataTansferObject.FoodManipulation;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Collections.Generic;
+using System;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace MyQueue.Controllers
 {
@@ -14,15 +21,60 @@ namespace MyQueue.Controllers
     {
         private readonly MQDBContext _context;
         private readonly UserManager<IdentityUser> _userManager;
-
-        public AuthorizationController(MQDBContext context, UserManager<IdentityUser> userManager)
+        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IConfiguration _config;
+        public AuthorizationController(MQDBContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IConfiguration config)
         {
             _userManager = userManager;
             _context = context;
+            _signInManager = signInManager;
+            _config = config;
         }
 
         // POST api/<AuthorizationController>
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] Login model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+                    if (passwordCheck.Succeeded)
+                    {
+                        var claims = new List<Claim>
+                        {
+                            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName)
+                        };
+                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
+                        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                        var token = new JwtSecurityToken(
+                            _config["Tokens:Issuer"],
+                            _config["Tokens:Audience"],
+                            claims,
+                            expires: DateTime.UtcNow.AddHours(12),
+                            signingCredentials: credentials
+                            );
 
+                        return Ok(new
+                        {
+                            token = new JwtSecurityTokenHandler().WriteToken(token),
+                            expiration = token.ValidTo
+                        });
+                    }
+
+                }
+                else
+                {
+                    return Unauthorized();
+                }
+            }
+
+            return BadRequest();
+        }
 
         // POST api/AuthorizationController
         [HttpPost("register")]
@@ -36,6 +88,7 @@ namespace MyQueue.Controllers
                     IdentityUser user = new IdentityUser();
                     user.UserName = registration.UserName;
                     user.Email = registration.Email;
+
 
                     IdentityResult result = _userManager.CreateAsync(user, registration.Password).Result;
 

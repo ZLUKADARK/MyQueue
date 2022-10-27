@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ namespace MyQueue.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class FoodController : ControllerBase
     {
         private readonly MQDBContext _context;
@@ -21,9 +23,10 @@ namespace MyQueue.Controllers
         {
             _context = context;
         }
-
+        
         // GET: api/Food/category
         [HttpGet("category")]
+        [Authorize(Policy = "User")]
         public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategory()
         {
             try
@@ -105,7 +108,7 @@ namespace MyQueue.Controllers
                 return BadRequest(e);
             }
         }
-
+        
         // PUT: api/Food/category/5
         [HttpPut("category/{id}")]
         public async Task<IActionResult> PutCategory(int id, CategoryDTO category)
