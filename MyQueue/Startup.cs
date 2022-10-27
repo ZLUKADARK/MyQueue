@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace MyQueue
 {
     public class Startup
@@ -23,13 +24,20 @@ namespace MyQueue
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        [System.Obsolete]
         public void ConfigureServices(IServiceCollection services)
         {
+
+            var secreteKey = Configuration.GetSection("JWTSettings:SecretKey").Value;
+            var issuer = Configuration.GetSection("JWTSettings:Issuer").Value;
+            var audience = Configuration.GetSection("JWTSettings:Audience").Value;
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secreteKey));
+
             services.AddControllersWithViews();
             services.AddControllers();
+            
             services.AddDbContext<MQDBContext>(options =>
                     options.UseNpgsql(Configuration.GetConnectionString("MQDBContext")));
+           
             services.AddIdentity<IdentityUser, IdentityRole>(
                 opt =>
                 {
@@ -40,24 +48,27 @@ namespace MyQueue
                 })
                 .AddEntityFrameworkStores<MQDBContext>()
                 .AddDefaultTokenProviders();
+            
+            services.Configure<JWTSettings>(Configuration.GetSection("JWTSettings"));
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters()
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
                 {
-                    ValidIssuer = Configuration["Tokens:Issuer"],
-                    ValidAudience = Configuration["Tokens:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                    ValidateIssuer = true,
+                    ValidIssuer = issuer,
+                    ValidateAudience = true,
+                    ValidAudience = audience,
+                    ValidateLifetime = true,
+                    IssuerSigningKey = signingKey,
+                    ValidateIssuerSigningKey = true
                 };
-            });
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("User", policy =>
-                       policy.RequireRole("User"));
-            });
+            });        
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,8 +83,9 @@ namespace MyQueue
 
             app.UseRouting();
 
-            app.UseAuthorization();
             app.UseAuthentication();
+            app.UseAuthorization();
+
 
             app.UseEndpoints(endpoints =>
             {

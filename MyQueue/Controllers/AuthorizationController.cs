@@ -12,6 +12,7 @@ using System;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace MyQueue.Controllers
 {
@@ -23,12 +24,13 @@ namespace MyQueue.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IConfiguration _config;
-        public AuthorizationController(MQDBContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IConfiguration config)
+        private readonly JWTSettings _options;
+        public AuthorizationController(MQDBContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IOptions<JWTSettings> config)
         {
             _userManager = userManager;
             _context = context;
             _signInManager = signInManager;
-            _config = config;
+            _options = config.Value;
         }
 
         // POST api/<AuthorizationController>
@@ -43,19 +45,21 @@ namespace MyQueue.Controllers
                     var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
                     if (passwordCheck.Succeeded)
                     {
-                        var claims = new List<Claim>
+
+                        var claims = new List<Claim>()
                         {
                             new Claim(JwtRegisteredClaimNames.Sub, user.Email),
                             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                             new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName)
                         };
-                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]));
+                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey));
                         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
                         var token = new JwtSecurityToken(
-                            _config["Tokens:Issuer"],
-                            _config["Tokens:Audience"],
-                            claims,
+                            issuer: _options.Issuer,
+                            audience: _options.Audience,
+                            claims: claims,
                             expires: DateTime.UtcNow.AddHours(12),
+                            notBefore: DateTime.UtcNow,
                             signingCredentials: credentials
                             );
 

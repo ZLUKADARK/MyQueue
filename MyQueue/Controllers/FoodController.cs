@@ -26,7 +26,7 @@ namespace MyQueue.Controllers
         
         // GET: api/Food/category
         [HttpGet("category")]
-        [Authorize(Policy = "User")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategory()
         {
             try
