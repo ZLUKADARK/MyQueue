@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using MyQueue.Services.AuthorizationServices;
 
 namespace MyQueue.Controllers
 {
@@ -23,7 +24,6 @@ namespace MyQueue.Controllers
         private readonly MQDBContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly IConfiguration _config;
         private readonly JWTSettings _options;
         public AuthorizationController(MQDBContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IOptions<JWTSettings> config)
         {
@@ -35,41 +35,24 @@ namespace MyQueue.Controllers
 
         // POST api/<AuthorizationController>
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] Login model)
+        public async Task<IActionResult> Login([FromBody] Login login)
         {
             if (ModelState.IsValid)
             {
-                var user = await _userManager.FindByEmailAsync(model.Email);
+                var user = await _userManager.FindByEmailAsync(login.Email);
                 if (user != null)
                 {
-                    var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
+                    var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, login.Password, false);
                     if (passwordCheck.Succeeded)
                     {
-
-                        var claims = new List<Claim>()
-                        {
-                            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName)
-                        };
-                        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey));
-                        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-                        var token = new JwtSecurityToken(
-                            issuer: _options.Issuer,
-                            audience: _options.Audience,
-                            claims: claims,
-                            expires: DateTime.UtcNow.AddHours(12),
-                            notBefore: DateTime.UtcNow,
-                            signingCredentials: credentials
-                            );
-
+                        var newtoken = new Token();
+                        var token = newtoken.GetToken(user, _options);
                         return Ok(new
                         {
                             token = new JwtSecurityTokenHandler().WriteToken(token),
                             expiration = token.ValidTo
                         });
                     }
-
                 }
                 else
                 {
