@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CS1902: Invalid option 'portable' for /debug; must be full or pdbonly
+dotnet_diagnostic.CS1902.severity = error

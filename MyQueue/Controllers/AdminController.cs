@@ -2,13 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyQueue.Data;
+using MyQueue.DataTansferObject.Admin;
 using MyQueue.DataTansferObject.FoodManipulation;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace MyQueue.Controllers
 {
@@ -54,36 +53,77 @@ namespace MyQueue.Controllers
 
         // GET: api/<AdminController>
         [HttpGet("Role")]
-        public async Task<ActionResult<IEnumerable<RoleDTO>>> Get()
+        public async Task<ActionResult<IEnumerable<RoleDTO>>> GetRole()
         {
             var result = from r in _roleManager.Roles select new RoleDTO { Id = r.Id, Name = r.Name };
             return await result.ToListAsync();
         }
 
-        // GET api/<AdminController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        // GET: api/<AdminController>
+        [HttpGet("Users")]
+        public async Task<ActionResult<IEnumerable<UsersDTO>>> GetUsers()
         {
-            return "value";
+            var user = await _userManager.Users.AsNoTracking().ToListAsync();
+                         
+            var result = from u in user
+                         select new UsersDTO
+                         {
+                             Id = u.Id,
+                             UserName = u.UserName,
+                             Email = u.Email,
+                             Phone = u.PhoneNumber,
+                             UserRole =  _userManager.GetRolesAsync(u).Result.ToList()
+                         };
+            
+            return result.ToList();
         }
 
-        // POST api/<AdminController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        [HttpDelete("User")]
+        public async Task<ActionResult<UsersDTO>> DeleteUser(IDToDelete delete)
         {
-
+            var user = await _userManager.FindByIdAsync(delete.Id);
+            if (user != null)
+            {
+                var result = new UsersDTO(){ Id = user.Id,UserName = user.UserName, Email = user.Email, Phone = user.PhoneNumber, UserRole = _userManager.GetRolesAsync(user).Result.ToList() };
+                await _userManager.DeleteAsync(user);
+                return result;
+            }
+            return BadRequest();
         }
 
-        // PUT api/<AdminController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpDelete("UserRole")]
+        public async Task<ActionResult<UserRoleDTO>> DeleteUserRole(UsersRole delete)
         {
+            var user = await _userManager.FindByIdAsync(delete.UserId);
+            if (user != null)
+            {
+                var role = await _roleManager.FindByIdAsync(delete.RoleId);
+                if(role != null)
+                {
+                    var result = new UserRoleDTO { Id = role.Id, Name = user.UserName, RoleName = role.Name };
+                    await _userManager.RemoveFromRoleAsync(user, role.Name);
+                    return result;
+                }
+                return BadRequest();
+            }
+            return BadRequest();
         }
-
-        // DELETE api/<AdminController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpPost("UserRole")]
+        public async Task<ActionResult<UserRoleDTO>> AddUserRole(UsersRole add)
         {
+            var user = await _userManager.FindByIdAsync(add.UserId);
+            if (user != null)
+            {
+                var role = await _roleManager.FindByIdAsync(add.RoleId);
+                if (role != null)
+                {
+                    var result = new UserRoleDTO { Id = role.Id, Name = user.UserName, RoleName = role.Name };
+                    await _userManager.AddToRoleAsync(user, role.Name);
+                    return result;
+                }
+                return BadRequest();
+            }
+            return BadRequest();
         }
     }
 }
