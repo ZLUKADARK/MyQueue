@@ -52,7 +52,7 @@ namespace MyQueue.Controllers
         }
 
         // GET: api/<AdminController>
-        [HttpGet("Role")]
+        [HttpGet("Roles")]
         public async Task<ActionResult<IEnumerable<RoleDTO>>> GetRole()
         {
             var result = from r in _roleManager.Roles select new RoleDTO { Id = r.Id, Name = r.Name };
