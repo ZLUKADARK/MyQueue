@@ -39,6 +39,7 @@ namespace MyQueue.Controllers
         {
             var order = await _context.Order.Where(o => o.Id == id).Include(x => x.Foods).Include(u =>  u.User).FirstOrDefaultAsync();
             List<FoodOrder> foodOrder = new List<FoodOrder>();
+            
             foreach (var o in order.Foods) 
                 foodOrder.Add(new FoodOrder { Name = o.Name, Price = o.Price });
                 
@@ -66,15 +67,10 @@ namespace MyQueue.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!OrderExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
-
             return NoContent();
         }
 
@@ -104,9 +100,7 @@ namespace MyQueue.Controllers
         {
             var order = await _context.Order.FindAsync(id);
             if (order == null)
-            {
                 return NotFound();
-            }
 
             _context.Order.Remove(order);
             await _context.SaveChangesAsync();

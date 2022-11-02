@@ -55,11 +55,8 @@ namespace MyQueue.Controllers
                     }
                 }
                 else
-                {
                     return Unauthorized();
-                }
             }
-
             return BadRequest();
         }
 
@@ -72,25 +69,16 @@ namespace MyQueue.Controllers
                 var existingUser = await _userManager.FindByEmailAsync(registration.Email);
                 if (existingUser == null)
                 {
-                    IdentityUser user = new IdentityUser();
-                    user.UserName = registration.UserName;
-                    user.Email = registration.Email;
-
-
-                    IdentityResult result = _userManager.CreateAsync(user, registration.Password).Result;
-
+                    IdentityUser user = new IdentityUser() { UserName = registration.UserName, Email = registration.Email };
+                    IdentityResult result = _userManager.CreateAsync(user, registration.Password).Result;                  
                     if (result.Succeeded)
                     {
                         await _userManager.AddToRoleAsync(user, "User");
                         return Created("", registration);
                     }
                 }
-
             }
-
             return BadRequest();
         }
-        
-       
     }
 }

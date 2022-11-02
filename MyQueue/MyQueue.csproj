@@ -24,7 +24,6 @@
 
   <ItemGroup>
     <Folder Include="Services\AdminServices\" />
-    <Folder Include="Services\FoodServices\" />
     <Folder Include="Services\OrdersServices\" />
   </ItemGroup>
 

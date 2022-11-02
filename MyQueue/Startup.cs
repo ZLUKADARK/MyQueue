@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
-
+using MyQueue.Services.FoodServices;
 
 namespace MyQueue
 {
@@ -34,7 +34,7 @@ namespace MyQueue
 
             services.AddControllersWithViews();
             services.AddControllers();
-            
+            services.AddTransient<FoodServices>();
             services.AddDbContext<MQDBContext>(options =>
                     options.UseNpgsql(Configuration.GetConnectionString("MQDBContext")));
            
