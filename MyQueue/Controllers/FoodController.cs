@@ -58,7 +58,8 @@ namespace MyQueue.Controllers
                                  Id = res.Id,
                                  Name = res.Name,
                                  Category = res.Category.Name,
-                                 Price = res.Price
+                                 Price = res.Price,
+                                 Active = res.Active.Value
                              };
                 return await result.ToListAsync();
             }
@@ -76,9 +77,7 @@ namespace MyQueue.Controllers
             {
                 var category = await _context.Category.FindAsync(id);   
                 if (category == null)
-                {
                     return NotFound();
-                }
                 var result = new CategoryDTO { Id = category.Id, Name = category.Name };
                 return result;
             }
@@ -97,10 +96,8 @@ namespace MyQueue.Controllers
             {
                 var food = await _context.Foods.Include(c => c.Category).Where(f => f.Id == id).AsNoTracking().FirstOrDefaultAsync();   
                 if (food == null)
-                {
                     return NotFound();
-                }
-                var result = new FoodsResultDTO { Id = food.Id, Name = food.Name, Category = food.Category.Name, Price = food.Price };
+                var result = new FoodsResultDTO { Id = food.Id, Name = food.Name, Category = food.Category.Name, Price = food.Price, Active = food.Active.Value };
                 return result;
             }
             catch (Exception e)
@@ -127,13 +124,9 @@ namespace MyQueue.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!CategoryExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
             return NoContent();
         }
@@ -143,9 +136,7 @@ namespace MyQueue.Controllers
         public async Task<IActionResult> PutFood(int id, FoodDTO foodDTO)
         {
             if (id != foodDTO.Id)
-            {
                 return BadRequest();
-            }
             var result = new Foods() { Id = foodDTO.Id, Name = foodDTO.Name, Price = foodDTO.Price };
             _context.Entry(result).State = EntityState.Modified;
 
@@ -156,13 +147,9 @@ namespace MyQueue.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!CategoryExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
 
             return NoContent();
@@ -185,13 +172,13 @@ namespace MyQueue.Controllers
         [HttpPost("food")]
         public async Task<ActionResult<FoodsResultDTO>> AddFood(FoodDTO foodDto)
         {
-            Foods foods = new Foods() { Name = foodDto.Name, Price = foodDto.Price, Category = await _context.Category.FindAsync(foodDto.Category) };
+            Foods foods = new Foods() { Name = foodDto.Name, Price = foodDto.Price, Category = await _context.Category.FindAsync(foodDto.Category), Active = foodDto.Active  };
             _context.Foods.Add(foods);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetCategory", 
                 new { id = foods.Id }, 
-                new FoodsResultDTO() { Id = foods.Id, Category = foods.Category.Name, Name = foods.Name, Price = foods.Price });
+                new FoodsResultDTO() { Id = foods.Id, Category = foods.Category.Name, Name = foods.Name, Price = foods.Price, Active = foods.Active.Value });
         }
 
         // DELETE: api/Food/category/5
@@ -200,9 +187,8 @@ namespace MyQueue.Controllers
         {
             var category = await _context.Category.FindAsync(id);
             if (category == null)
-            {
                 return NotFound();
-            }
+
 
             _context.Category.Remove(category);
             await _context.SaveChangesAsync();
@@ -216,9 +202,8 @@ namespace MyQueue.Controllers
         {
             var food = await _context.Foods.Include(c => c.Category).Where(f => f.Id == id).AsNoTracking().FirstOrDefaultAsync();
             if (food == null)
-            {
                 return NotFound();
-            }
+
 
             _context.Foods.Remove(food);
             await _context.SaveChangesAsync();

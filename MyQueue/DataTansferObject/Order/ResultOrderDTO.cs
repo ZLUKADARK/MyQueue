@@ -9,8 +9,8 @@ namespace MyQueue.DataTansferObject.Order
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
-        public List<Food> Foods { get; set; }
         public string User { get; set; }
         public decimal TotalPrice { get; set; }
+        public List<FoodOrder> Foods { get; set; }
     }
 }

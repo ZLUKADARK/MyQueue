@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MyQueue.DataTansferObject.Order
 {
-    public class Food
+    public class FoodOrder
     {
         public string Name { get; set; }
         public decimal Price { get; set; }

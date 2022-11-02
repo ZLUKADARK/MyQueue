@@ -10,6 +10,7 @@ using MyQueue.Data;
 using MyQueue.Data.Models;
 using MyQueue.DataTansferObject.Order;
 
+
 namespace MyQueue.Controllers
 {
     [Route("api/[controller]")]
@@ -28,21 +29,23 @@ namespace MyQueue.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrder()
         {
-            return await _context.Order.ToListAsync();
+            var result = await _context.Order.Include(x => x.Foods).Include(x => x.User).ToListAsync();
+            return Ok(result);
         }
 
         // GET: api/Orders/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Order>> GetOrder(int id)
+        public async Task<ActionResult<ResultOrderDTO>> GetOrder(int id)
         {
-            var order = await _context.Order.FindAsync(id);
-
+            var order = await _context.Order.Where(o => o.Id == id).Include(x => x.Foods).Include(u =>  u.User).FirstOrDefaultAsync();
+            List<FoodOrder> foodOrder = new List<FoodOrder>();
+            foreach (var o in order.Foods) 
+                foodOrder.Add(new FoodOrder { Name = o.Name, Price = o.Price });
+                
             if (order == null)
-            {
                 return NotFound();
-            }
 
-            return order;
+            return new ResultOrderDTO { Id = order.Id, User = order.User.UserName, Date = order.Date, Foods = foodOrder, TotalPrice = foodOrder.Sum(f => f.Price) };
         }
 
         // PUT: api/Orders/5
@@ -79,25 +82,20 @@ namespace MyQueue.Controllers
         [HttpPost]
         public async Task<ActionResult<Order>> PostOrder(AddOrderDTO orderDTO)
         {
-            ResultOrderDTO result = new ResultOrderDTO();
             List<Foods> foods = new List<Foods>();
-            List<Food> food = new List<Food>();
+            List<FoodOrder> foodOrder = new List<FoodOrder>();
             foreach (var f in orderDTO.FoodsId)
                 foods.Add(await _context.Foods.FindAsync(f));
             foreach (var f in foods)
-                food.Add(new Food { Name = f.Name, Price = f.Price });
-
+                foodOrder.Add(new FoodOrder { Name = f.Name, Price = f.Price });
 
             Order order = new Order() { Date = DateTime.Now, User = await _userManager.FindByIdAsync(orderDTO.UserId), Foods = foods };
             _context.Order.Add(order);
             await _context.SaveChangesAsync();
-            result.Id = order.Id;
-            result.User = order.User.UserName;
-            result.Date = order.Date;
-            result.Foods = food;
-            result.TotalPrice = food.Sum(f => f.Price);
 
-            return CreatedAtAction("GetOrder", new { id = order.Id }, result);
+            return CreatedAtAction("GetOrder", 
+                new { id = order.Id }, 
+                new ResultOrderDTO { Id = order.Id, User = order.User.UserName, Date = order.Date, Foods = foodOrder, TotalPrice = foodOrder.Sum(f => f.Price)});
         }
 
         // DELETE: api/Orders/5
