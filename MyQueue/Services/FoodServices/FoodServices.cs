@@ -137,7 +137,7 @@ namespace MyQueue.Services.FoodServices
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!CategoryExists(id))
+                if (!FoodExists(id))
                     return false;
                 else
                     throw;
