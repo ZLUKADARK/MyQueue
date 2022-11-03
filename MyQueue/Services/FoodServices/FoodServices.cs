@@ -144,6 +144,24 @@ namespace MyQueue.Services.FoodServices
             }
         }
 
+        public async Task<bool> ChangeFoodActivity(int id, bool activity)
+        {
+            var result = await _context.Foods.FindAsync(id);
+            result.Active = activity;
+            _context.Entry(result).State = EntityState.Modified;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!FoodExists(id))
+                    return false;
+                else
+                    throw;
+            }
+        }
         private bool CategoryExists(int id)
         {
             return _context.Category.Any(e => e.Id == id);

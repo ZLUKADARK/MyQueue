@@ -15,6 +15,7 @@ namespace MyQueue.Services.FoodServices
         public Task<FoodsResultDTO> GetFood(int id);
         public Task<bool> PutCategory(int id, CategoryDTO category);
         public Task<bool> PutFood(int id, FoodDTO foodDTO);
+        public Task<bool> ChangeFoodActivity(int id, bool activity);
         public Task<CategoryDTO> AddCategory(CategoryDTO categoryDto);
         public Task<FoodsResultDTO> AddFood(FoodDTO foodDto);
         public Task<CategoryDTO> DeleteCategory(int id);

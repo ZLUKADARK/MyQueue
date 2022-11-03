@@ -22,10 +22,5 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.10" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\AdminServices\" />
-    <Folder Include="Services\OrdersServices\" />
-  </ItemGroup>
-
 
 </Project>

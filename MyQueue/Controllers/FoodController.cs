@@ -14,14 +14,12 @@ namespace MyQueue.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-
+    [Authorize]
     public class FoodController : ControllerBase
     {
-        private readonly MQDBContext _context;
         private readonly FoodServices _foodServices;
-        public FoodController(MQDBContext context, FoodServices foodServices)
+        public FoodController(FoodServices foodServices)
         {
-            _context = context;
             _foodServices = foodServices;
         }
         
@@ -85,6 +83,18 @@ namespace MyQueue.Controllers
 
             var result = await _foodServices.PutFood(id, foodDTO);
 
+            if (result == false)
+                return NotFound();
+
+            return Ok("Изменено");
+        }
+
+        // PUT: api/Food/food/visibility/5
+        [HttpPut("food/activity/{id}/{activity}")]
+        public async Task<IActionResult> ChangeFoodActivity(int id, bool activity)
+        {
+            var result = await _foodServices.ChangeFoodActivity(id, activity);
+            
             if (result == false)
                 return NotFound();
 

@@ -27,10 +27,19 @@ namespace MyQueue.Controllers
 
         // GET: api/Orders
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrder()
+        public async Task<ActionResult<IEnumerable<ResultOrderDTO>>> GetOrder()
         {
-            var result = await _context.Order.Include(x => x.Foods).Include(x => x.User).ToListAsync();
-            return Ok(result);
+            var result = from order in _context.Order.Include(x => x.Foods).Include(x => x.User)
+                         select new ResultOrderDTO
+                         {
+                             Id = order.Id,
+                             User = order.User.UserName,
+                             Date = order.Date,
+                             Foods = order.Foods.Select(x => new FoodOrder { Name = x.Name, Price = x.Price }).ToList(),
+                             TotalPrice = order.Foods.Select(x => new FoodOrder { Name = x.Name, Price = x.Price }).Sum(t => t.Price)
+                         };
+            
+            return await result.ToListAsync();
         }
 
         // GET: api/Orders/5
@@ -40,11 +49,11 @@ namespace MyQueue.Controllers
             var order = await _context.Order.Where(o => o.Id == id).Include(x => x.Foods).Include(u =>  u.User).FirstOrDefaultAsync();
             List<FoodOrder> foodOrder = new List<FoodOrder>();
             
-            foreach (var o in order.Foods) 
-                foodOrder.Add(new FoodOrder { Name = o.Name, Price = o.Price });
-                
             if (order == null)
                 return NotFound();
+
+            foreach (var o in order.Foods) 
+                foodOrder.Add(new FoodOrder { Name = o.Name, Price = o.Price });
 
             return new ResultOrderDTO { Id = order.Id, User = order.User.UserName, Date = order.Date, Foods = foodOrder, TotalPrice = foodOrder.Sum(f => f.Price) };
         }

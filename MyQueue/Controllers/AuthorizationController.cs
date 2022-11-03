@@ -3,15 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using MyQueue.DataTansferObject.Authorization;
 using MyQueue.Data;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using MyQueue.DataTansferObject.FoodManipulation;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Collections.Generic;
-using System;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MyQueue.Services.AuthorizationServices;
 
@@ -60,9 +52,17 @@ namespace MyQueue.Controllers
             return BadRequest();
         }
 
+        // POST api/<AuthorizationController>
+        [HttpPost("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            return Ok();
+        }
+
         // POST api/AuthorizationController
         [HttpPost("register")]
-        public async Task<IActionResult> Registeration( Registration registration)
+        public async Task<IActionResult> Registeration(Registration registration)
         {
             if (ModelState.IsValid)
             {

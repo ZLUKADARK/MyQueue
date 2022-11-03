@@ -17,12 +17,10 @@ namespace MyQueue.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly MQDBContext _context;
 
         public AdminController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, MQDBContext context)
         {
             _userManager = userManager;
-            _context = context;
             _roleManager = roleManager;
         }
        
