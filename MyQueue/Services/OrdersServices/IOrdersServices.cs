@@ -9,11 +9,10 @@ namespace MyQueue.Services.OrdersServices
 {
     interface IOrdersServices
     {
-        public Task<IEnumerable<Order>> GetOrder();
+        public Task<IEnumerable<ResultOrderDTO>> GetOrder();
         public Task<ResultOrderDTO> GetOrder(int id);
-        public Task<bool> PutOrder(int id, Order order);
-        public Task<Order> PostOrder(AddOrderDTO orderDTO);
-        public Task<Order> DeleteOrder(int id);
+        public Task<ResultOrderDTO> PostOrder(AddOrderDTO orderDTO);
+        public Task<ShortResult> DeleteOrder(int id);
 
     }
 }

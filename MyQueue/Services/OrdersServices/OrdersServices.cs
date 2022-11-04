@@ -1,4 +1,7 @@
-﻿using MyQueue.Data.Models;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using MyQueue.Data;
+using MyQueue.Data.Models;
 using MyQueue.DataTansferObject.Order;
 using System;
 using System.Collections.Generic;
@@ -9,29 +12,73 @@ namespace MyQueue.Services.OrdersServices
 {
     public class OrdersServices : IOrdersServices
     {
-        public Task<Order> DeleteOrder(int id)
+        private readonly MQDBContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
+        public OrdersServices(MQDBContext context, UserManager<IdentityUser> userManager)
         {
-            throw new NotImplementedException();
+            _context = context;
+            _userManager = userManager;
+        }
+        public async Task<ShortResult> DeleteOrder(int id)
+        {
+            var order = await _context.Order.FindAsync(id);
+            if (order == null)
+                return null;
+
+            _context.Order.Remove(order);
+            await _context.SaveChangesAsync();
+
+            return new ShortResult { Date = order.Date, Id = order.Id };
         }
 
-        public Task<IEnumerable<Order>> GetOrder()
+        public async Task<IEnumerable<ResultOrderDTO>> GetOrder()
         {
-            throw new NotImplementedException();
+            var result = from order in _context.Order.Include(x => x.Foods).Include(x => x.User)
+                         select new ResultOrderDTO
+                         {
+                             Id = order.Id,
+                             User = order.User.UserName,
+                             Date = order.Date,
+                             Foods = order.Foods.Select(x => new FoodOrder { Name = x.Name, Price = x.Price }).ToList(),
+                             TotalPrice = order.Foods.Select(x => new FoodOrder { Name = x.Name, Price = x.Price }).Sum(t => t.Price)
+                         };
+
+            return await result.ToListAsync();
         }
 
-        public Task<ResultOrderDTO> GetOrder(int id)
+        public async Task<ResultOrderDTO> GetOrder(int id)
         {
-            throw new NotImplementedException();
+            var result = from order in _context.Order.Where(o => o.Id == id).Include(x => x.Foods).Include(x => x.User)
+                         select new ResultOrderDTO
+                         {
+                             Id = order.Id,
+                             User = order.User.UserName,
+                             Date = order.Date,
+                             Foods = order.Foods.Select(x => new FoodOrder { Name = x.Name, Price = x.Price }).ToList(),
+                             TotalPrice = order.Foods.Select(x => new FoodOrder { Name = x.Name, Price = x.Price }).Sum(t => t.Price)
+                         };
+
+            if (result == null)
+                return null;
+
+            return await result.FirstOrDefaultAsync();
         }
 
-        public Task<Order> PostOrder(AddOrderDTO orderDTO)
+        public async Task<ResultOrderDTO> PostOrder(AddOrderDTO orderDTO)
         {
-            throw new NotImplementedException();
-        }
+            List<Foods> foods = new List<Foods>();
+            List<FoodOrder> foodOrder = new List<FoodOrder>();
+            
+            foreach (var f in orderDTO.FoodsId)
+                foods.Add(await _context.Foods.FindAsync(f));
+            foreach (var f in foods)
+                foodOrder.Add(new FoodOrder { Name = f.Name, Price = f.Price });
 
-        public Task<bool> PutOrder(int id, Order order)
-        {
-            throw new NotImplementedException();
+            Order order = new Order() { Date = DateTime.Now, User = await _userManager.FindByIdAsync(orderDTO.UserId), Foods = foods };
+            _context.Order.Add(order);
+            await _context.SaveChangesAsync();
+
+            return new ResultOrderDTO { Id = order.Id, User = order.User.UserName, Date = order.Date, Foods = foodOrder, TotalPrice = foodOrder.Sum(f => f.Price)};
         }
     }
 }
