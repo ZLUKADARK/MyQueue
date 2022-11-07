@@ -30,7 +30,7 @@ namespace MyQueue.Controllers
                 var result = await _authorizationServices.Login(login);
                 if (result != null)
                 {
-                    return Ok(result);
+                    return Ok( new { Token = result });
                 }
                 else
                     return Unauthorized();
