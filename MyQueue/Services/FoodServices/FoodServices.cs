@@ -91,6 +91,20 @@ namespace MyQueue.Services.FoodServices
                          };
             return await result.ToListAsync();
         }
+        
+        public async Task<IEnumerable<FoodsResultDTO>> GetActiveFood()
+        {
+            var result = from res in _context.Foods.Include(c => c.Category).Where(f => f.Active == true).AsNoTracking()
+                         select new FoodsResultDTO
+                         {
+                             Id = res.Id,
+                             Name = res.Name,
+                             Category = res.Category.Name,
+                             Price = res.Price,
+                             Active = res.Active
+                         };
+            return await result.ToListAsync();
+        }
 
         public async Task<FoodsResultDTO> GetFood(int id)
         {
@@ -162,6 +176,7 @@ namespace MyQueue.Services.FoodServices
                     throw;
             }
         }
+        
         private bool CategoryExists(int id)
         {
             return _context.Category.Any(e => e.Id == id);

@@ -11,6 +11,7 @@ namespace MyQueue.Services.FoodServices
     {
         public Task<IEnumerable<CategoryDTO>> GetCategory();
         public Task<IEnumerable<FoodsResultDTO>> GetFood();
+        public Task<IEnumerable<FoodsResultDTO>> GetActiveFood();
         public Task<CategoryDTO> GetCategory(int id);
         public Task<FoodsResultDTO> GetFood(int id);
         public Task<bool> PutCategory(int id, CategoryDTO category);

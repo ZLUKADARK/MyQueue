@@ -9,7 +9,7 @@ namespace MyQueue.Services.AuthorizationServices
 {
     interface IAuthorizationServices
     {
-        public Task<JwtSecurityTokenHandler> Login(Login login);
+        public Task<string> Login(Login login);
         public Task<Registration> Registeration(Registration registration);
     }
 }

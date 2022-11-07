@@ -23,24 +23,32 @@ namespace MyQueue.Controllers
             _foodServices = foodServices;
         }
         
-        // GET: api/Food/category
-        [HttpGet("category")]
+        // GET: api/Food/Category
+        [HttpGet("Category")]
         public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategory()
         {
             var result = await _foodServices.GetCategory();
             return result.ToList();     
         }
 
-        // GET: api/Food/food
-        [HttpGet("food")]
+        // GET: api/Food/Food
+        [HttpGet("Food")]
         public async Task<ActionResult<IEnumerable<FoodsResultDTO>>> GetFood()
         {
             var result = await _foodServices.GetFood();
             return result.ToList();
         }
 
-        // GET: api/Food/category/5
-        [HttpGet("category/{id}")]
+        // GET: api/Food/ActiveFood
+        [HttpGet("ActiveFood")]
+        public async Task<ActionResult<IEnumerable<FoodsResultDTO>>> GetActiveFood()
+        {
+            var result = await _foodServices.GetActiveFood();
+            return result.ToList();
+        }
+
+        // GET: api/Food/Category/5
+        [HttpGet("Category/{id}")]
         public async Task<ActionResult<CategoryDTO>> GetCategory(int id)
         {
             var result = await _foodServices.GetCategory(id);
@@ -49,8 +57,8 @@ namespace MyQueue.Controllers
             return result;
         }
 
-        // GET: api/Food/food/5
-        [HttpGet("food/{id}")]
+        // GET: api/Food/Food/5
+        [HttpGet("Food/{id}")]
         public async Task<ActionResult<FoodsResultDTO>> GetFood(int id)
         {
             var result = await _foodServices.GetFood(id);   
@@ -59,8 +67,8 @@ namespace MyQueue.Controllers
             return result;  
         }
         
-        // PUT: api/Food/category/5
-        [HttpPut("category/{id}")]
+        // PUT: api/Food/Category/5
+        [HttpPut("Category/{id}")]
         public async Task<IActionResult> PutCategory(int id, CategoryDTO category)
         {
             if (category.Id != id)
@@ -74,8 +82,8 @@ namespace MyQueue.Controllers
             return Ok("Изменено");
         }
         
-        // PUT: api/Food/food/5
-        [HttpPut("food/{id}")]
+        // PUT: api/Food/Food/5
+        [HttpPut("Food/{id}")]
         public async Task<IActionResult> PutFood(int id, FoodDTO foodDTO)
         {
             if (foodDTO.Id != id)
@@ -89,8 +97,8 @@ namespace MyQueue.Controllers
             return Ok("Изменено");
         }
 
-        // PUT: api/Food/food/visibility/5
-        [HttpPut("food/activity/{id}/{activity}")]
+        // PUT: api/Food/Food/visibility/5
+        [HttpPut("Food/activity/{id}/{activity}")]
         public async Task<IActionResult> ChangeFoodActivity(int id, bool activity)
         {
             var result = await _foodServices.ChangeFoodActivity(id, activity);
@@ -101,8 +109,8 @@ namespace MyQueue.Controllers
             return Ok("Изменено");
         }
 
-        // POST: api/Food/category
-        [HttpPost("category")]
+        // POST: api/Food/Category
+        [HttpPost("Category")]
         public async Task<ActionResult<CategoryDTO>> AddCategory(CategoryDTO categoryDto)
         {
             var result = await _foodServices.AddCategory(categoryDto);
@@ -112,8 +120,8 @@ namespace MyQueue.Controllers
                 new CategoryDTO { Id = result.Id, Name = result.Name });
         }
         
-        // POST: api/Food/food
-        [HttpPost("food")]
+        // POST: api/Food/Food
+        [HttpPost("Food")]
         public async Task<ActionResult<FoodsResultDTO>> AddFood(FoodDTO foodDto)
         {
             var result = await _foodServices.AddFood(foodDto);
@@ -122,8 +130,8 @@ namespace MyQueue.Controllers
                 new FoodsResultDTO() { Id = result.Id, Category = result.Category, Name = result.Name, Price = result.Price, Active = result.Active });
         }
 
-        // DELETE: api/Food/category/5
-        [HttpDelete("category/{id}")]
+        // DELETE: api/Food/Category/5
+        [HttpDelete("Category/{id}")]
         public async Task<ActionResult<CategoryDTO>> DeleteCategory(int id)
         {
             var result = await _foodServices.DeleteCategory(id);
@@ -133,7 +141,7 @@ namespace MyQueue.Controllers
         }
 
         // DELETE: api/Food/food/5
-        [HttpDelete("food/{id}")]
+        [HttpDelete("Food/{id}")]
         public async Task<ActionResult<FoodsResultDTO>> DeleteFood(int id)
         {
             var result = await _foodServices.DeleteFood(id);
@@ -141,7 +149,6 @@ namespace MyQueue.Controllers
                 return NotFound();
             return result;
         }
-
         
     }
 }

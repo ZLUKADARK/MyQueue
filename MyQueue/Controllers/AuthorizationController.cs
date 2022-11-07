@@ -13,38 +13,24 @@ namespace MyQueue.Controllers
     [ApiController]
     public class AuthorizationController : ControllerBase
     {
-        private readonly MQDBContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly JWTSettings _options;
-        public AuthorizationController(MQDBContext context, UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IOptions<JWTSettings> config)
+        private readonly AuthorizationServices _authorizationServices;
+        public AuthorizationController(SignInManager<IdentityUser> signInManager, AuthorizationServices authorizationServices)
         {
-            _userManager = userManager;
-            _context = context;
             _signInManager = signInManager;
-            _options = config.Value;
+            _authorizationServices = authorizationServices;
         }
 
-        // POST api/<AuthorizationController>
+        // POST api/Authorization/Login
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Login login)
         {
             if (ModelState.IsValid)
             {
-                var user = await _userManager.FindByEmailAsync(login.Email);
-                if (user != null)
+                var result = await _authorizationServices.Login(login);
+                if (result != null)
                 {
-                    var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, login.Password, false);
-                    if (passwordCheck.Succeeded)
-                    {
-                        var newtoken = new Token();
-                        var token = newtoken.GetToken(user, _options);
-                        return Ok(new
-                        {
-                            token = new JwtSecurityTokenHandler().WriteToken(token),
-                            expiration = token.ValidTo
-                        });
-                    }
+                    return Ok(result);
                 }
                 else
                     return Unauthorized();
@@ -52,7 +38,7 @@ namespace MyQueue.Controllers
             return BadRequest();
         }
 
-        // POST api/<AuthorizationController>
+        // POST api/Authorization/Logout
         [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {
@@ -60,23 +46,13 @@ namespace MyQueue.Controllers
             return Ok();
         }
 
-        // POST api/AuthorizationController
+        // POST api/Authorization/Register
         [HttpPost("register")]
         public async Task<IActionResult> Registeration(Registration registration)
         {
             if (ModelState.IsValid)
             {
-                var existingUser = await _userManager.FindByEmailAsync(registration.Email);
-                if (existingUser == null)
-                {
-                    IdentityUser user = new IdentityUser() { UserName = registration.UserName, Email = registration.Email };
-                    IdentityResult result = _userManager.CreateAsync(user, registration.Password).Result;                  
-                    if (result.Succeeded)
-                    {
-                        await _userManager.AddToRoleAsync(user, "User");
-                        return Created("", registration);
-                    }
-                }
+                return Created("", await _authorizationServices.Registeration(registration));
             }
             return BadRequest();
         }
