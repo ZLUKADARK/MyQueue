@@ -37,20 +37,24 @@ namespace MyQueue.Controllers
                 }
                 else if (result.Code != null)
                 {
-                    var callbackUrl = Url.Action(
-                                            "ConfirmEmail",
-                                            "Authorization",
-                                            new { userName = login.Email, code = result.Code },
-                                            protocol: HttpContext.Request.Scheme);
-                    EmailService emailService = new EmailService();
-                    await emailService.SendEmailAsync(login.Email, "Confirm your account",
-                        $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>", _mailOptions);
-
-                    return Content("Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
+                    SendMailToConfirm(login.Email, result.Code);
+                    return Content("Ваша регистрация не завршена. Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
                 }
                 return Unauthorized();
             }
             return BadRequest();
+        }
+
+        private async void SendMailToConfirm(string email, string code)
+        {
+            var callbackUrl = Url.Action(
+                                            "ConfirmEmail",
+                                            "Authorization",
+                                            new { userName = email, code = code },
+                                            protocol: HttpContext.Request.Scheme);
+            EmailService emailService = new EmailService();
+            await emailService.SendEmailAsync(email, "Confirm your account",
+                $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>", _mailOptions);
         }
 
         // POST api/Authorization/Logout
@@ -70,15 +74,7 @@ namespace MyQueue.Controllers
                 var user = await _authorizationServices.Registeration(registration);
                 if (user != null)
                 {
-                    var callbackUrl = Url.Action(
-                                            "ConfirmEmail",
-                                            "Authorization",
-                                            new { userName = user.Email, code = user.Code },
-                                            protocol: HttpContext.Request.Scheme);
-                    EmailService emailService = new EmailService();
-                    await emailService.SendEmailAsync(registration.Email, "Confirm your account",
-                        $"Подтвердите регистрацию, перейдя по ссылке: <a href='{callbackUrl}'>Подтвердить</a>", _mailOptions);
-
+                    SendMailToConfirm(user.Email, user.Code);
                     return Content("Для завершения регистрации проверьте электронную почту и перейдите по ссылке, указанной в письме");
                 }
                 return BadRequest();
