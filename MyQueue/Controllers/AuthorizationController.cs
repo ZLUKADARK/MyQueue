@@ -33,7 +33,7 @@ namespace MyQueue.Controllers
                 var result = await _authorizationServices.Login(login);
                 if (result.Token != null)
                 {
-                    return Ok( new { Token = result.Token });
+                    return Ok(new { Token = result.Token });
                 }
                 else if (result.Code != null)
                 {
