@@ -106,6 +106,7 @@ namespace MyQueue.Services.AdminServices
                              Id = u.Id,
                              UserName = u.UserName,
                              Email = u.Email,
+                             EmailConfirmed = u.EmailConfirmed,
                              Phone = u.PhoneNumber,
                              UserRole = _userManager.GetRolesAsync(u).Result.ToList()
                          };

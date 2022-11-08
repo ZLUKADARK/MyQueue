@@ -9,7 +9,8 @@ namespace MyQueue.Services.AuthorizationServices
 {
     interface IAuthorizationServices
     {
-        public Task<string> Login(Login login);
-        public Task<Registration> Registeration(Registration registration);
+        public Task<TokenOrMailConfirme> Login(Login login);
+        public Task<RegistrationSuccsess> Registeration(Registration registration);
+        public Task<bool> ConfirmEmail(string userName, string code);
     }
 }

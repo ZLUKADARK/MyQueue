@@ -13,32 +13,59 @@ namespace MyQueue.Services.AuthorizationServices
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly JWTSettings _options;
-        public AuthorizationServices(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IOptions<JWTSettings> config)
+
+        public AuthorizationServices(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, IOptions<JWTSettings> options)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _options = config.Value;
+            _options = options.Value;
+            _options = options.Value;
         }
-        public async Task<string> Login(Login login)
+
+        public async Task<bool> ConfirmEmail(string userName, string code)
+        {
+            if (userName == null || code == null)
+            {
+                return false;
+            }
+            var user = await _userManager.FindByEmailAsync(userName);
+            if (user == null)
+            {
+                return false;
+            }
+            var result = await _userManager.ConfirmEmailAsync(user, code);
+            if (result.Succeeded)
+                return true;
+            else
+                return false;
+        }
+
+        public async Task<TokenOrMailConfirme> Login(Login login)
         {
             var user = await _userManager.FindByEmailAsync(login.Email);
             if (user != null)
             {
-                var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, login.Password, false);
-                if (passwordCheck.Succeeded)
+                if (user.EmailConfirmed == true)
                 {
-                    var newtoken = new Token();
-                    var token = newtoken.GetToken(user, _options);
-                    return new JwtSecurityTokenHandler().WriteToken(token);
+                    var passwordCheck = await _signInManager.CheckPasswordSignInAsync(user, login.Password, false);
+                    if (passwordCheck.Succeeded)
+                    {
+                        var newtoken = new Token();
+                        var token = newtoken.GetToken(user, _options);
+                        return new TokenOrMailConfirme { Token = new JwtSecurityTokenHandler().WriteToken(token) };
+                    }
+                    return null;
                 }
                 else
-                    return null;
+                {
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    return new TokenOrMailConfirme { Code = code };
+                }
             }
-            else
-                return null;
+            return null;
         }
 
-        public async Task<Registration> Registeration(Registration registration)
+        public async Task<RegistrationSuccsess> Registeration(Registration registration)
         {
             var existingUser = await _userManager.FindByEmailAsync(registration.Email);
             if (existingUser == null)
@@ -48,7 +75,8 @@ namespace MyQueue.Services.AuthorizationServices
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, "User");
-                    return registration;
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    return new RegistrationSuccsess { Email = registration.Email, Password = registration.Password, UserName = registration.UserName, Code = code };
                 }
                 else
                     return null;

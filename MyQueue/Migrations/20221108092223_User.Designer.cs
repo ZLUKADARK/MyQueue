@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyQueue.Migrations
 {
     [DbContext(typeof(MQDBContext))]
-    [Migration("20221025091245_Identitynavigation")]
-    partial class Identitynavigation
+    [Migration("20221108092223_User")]
+    partial class User
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -251,6 +251,9 @@ namespace MyQueue.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<bool?>("Active")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer");

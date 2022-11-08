@@ -11,6 +11,8 @@ namespace MyQueue.Data.Models
         public int Id { get; set; }
         public DateTime Date { get; set; }
         public List<Foods> Foods { get; set; }
+        [ForeignKey("UserId")]
+        public string UserId { get; set; }
         public IdentityUser User { get; set; }
     }
 }

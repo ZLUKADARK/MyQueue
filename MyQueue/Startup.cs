@@ -57,6 +57,7 @@ namespace MyQueue
                 .AddDefaultTokenProviders();
             
             services.Configure<JWTSettings>(Configuration.GetSection("JWTSettings"));
+            services.Configure<MailConfig>(Configuration.GetSection("MailConfig"));
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
